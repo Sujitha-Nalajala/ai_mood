@@ -1,0 +1,1533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MoodSpace — Feel. Adapt. Thrive.</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Mono:wght@300;400&family=Cabinet+Grotesk:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #13131a;
+    --text: #e8e6f0;
+    --text-dim: #8a8799;
+    --accent: #c4a882;
+    --glow: rgba(196,168,130,0.15);
+    --orb1: #1a1035;
+    --orb2: #0d1f2d;
+    --orb3: #1a0d1a;
+    --card-bg: rgba(255,255,255,0.04);
+    --border: rgba(255,255,255,0.08);
+    --transition: 1.2s cubic-bezier(0.16,1,0.3,1);
+  }
+
+  /* MOOD THEMES */
+  .theme-joyful {
+    --bg: #0f1a08;
+    --surface: #162210;
+    --text: #f0f4e8;
+    --text-dim: #8aa87a;
+    --accent: #a8d96a;
+    --glow: rgba(168,217,106,0.15);
+    --orb1: #1a2e08;
+    --orb2: #243d0d;
+    --orb3: #0f2208;
+  }
+  .theme-calm {
+    --bg: #080f1a;
+    --surface: #0d1625;
+    --text: #e8eef8;
+    --text-dim: #7a90b8;
+    --accent: #6aabf0;
+    --glow: rgba(106,171,240,0.15);
+    --orb1: #081830;
+    --orb2: #0d2240;
+    --orb3: #061428;
+  }
+  .theme-anxious {
+    --bg: #0f0a18;
+    --surface: #160f22;
+    --text: #ede8f8;
+    --text-dim: #9b8ab8;
+    --accent: #b08af0;
+    --glow: rgba(176,138,240,0.15);
+    --orb1: #1a0f30;
+    --orb2: #100d28;
+    --orb3: #1a0828;
+  }
+  .theme-energetic {
+    --bg: #1a0c06;
+    --surface: #221008;
+    --text: #f8ede8;
+    --text-dim: #b87a5a;
+    --accent: #f0824a;
+    --glow: rgba(240,130,74,0.15);
+    --orb1: #2d1008;
+    --orb2: #3d1808;
+    --orb3: #220d06;
+  }
+  .theme-sad {
+    --bg: #0a0c10;
+    --surface: #101318;
+    --text: #dde2ec;
+    --text-dim: #6a7590;
+    --accent: #7090c0;
+    --glow: rgba(112,144,192,0.18);
+    --orb1: #0d1220;
+    --orb2: #0a1028;
+    --orb3: #080e18;
+  }
+  .theme-focused {
+    --bg: #08100a;
+    --surface: #0d1810;
+    --text: #e0ede2;
+    --text-dim: #5a8a68;
+    --accent: #4ac47a;
+    --glow: rgba(74,196,122,0.15);
+    --orb1: #0a1e10;
+    --orb2: #082818;
+    --orb3: #061408;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Cabinet Grotesk', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+    transition: background var(--transition), color var(--transition);
+    cursor: none;
+  }
+
+  /* CUSTOM CURSOR */
+  .cursor {
+    position: fixed;
+    width: 10px; height: 10px;
+    background: var(--accent);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9999;
+    transition: transform 0.1s, background 0.5s;
+    mix-blend-mode: screen;
+  }
+  .cursor-ring {
+    position: fixed;
+    width: 36px; height: 36px;
+    border: 1px solid var(--accent);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9998;
+    opacity: 0.4;
+    transition: transform 0.15s, border-color 0.5s, width 0.2s, height 0.2s;
+  }
+
+  /* BACKGROUND ORBS */
+  .bg-scene {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.6;
+    transition: background var(--transition), opacity var(--transition);
+    animation: float linear infinite;
+  }
+  .orb-1 {
+    width: 600px; height: 600px;
+    background: var(--orb1);
+    top: -200px; left: -200px;
+    animation-duration: 20s;
+  }
+  .orb-2 {
+    width: 500px; height: 500px;
+    background: var(--orb2);
+    bottom: -100px; right: -100px;
+    animation-duration: 25s;
+    animation-direction: reverse;
+  }
+  .orb-3 {
+    width: 400px; height: 400px;
+    background: var(--orb3);
+    top: 40%; left: 50%;
+    transform: translate(-50%, -50%);
+    animation-duration: 18s;
+  }
+  @keyframes float {
+    0%,100% { transform: translate(0,0) scale(1); }
+    33% { transform: translate(30px,-30px) scale(1.05); }
+    66% { transform: translate(-20px,20px) scale(0.95); }
+  }
+
+  /* NOISE OVERLAY */
+  .noise {
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    opacity: 0.025;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+    background-size: 200px 200px;
+  }
+
+  /* LAYOUT */
+  .app {
+    position: relative;
+    z-index: 2;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* HEADER */
+  header {
+    width: 100%;
+    max-width: 900px;
+    padding: 2.5rem 2rem 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.6rem;
+    font-weight: 300;
+    letter-spacing: 0.08em;
+    color: var(--text);
+    transition: color var(--transition);
+  }
+  .logo span { color: var(--accent); font-style: italic; }
+  .streak-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    padding: 0.4rem 0.9rem;
+    border-radius: 100px;
+    transition: all var(--transition);
+  }
+  .streak-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.8)} }
+
+  /* MAIN CONTAINER */
+  .main {
+    width: 100%;
+    max-width: 700px;
+    padding: 4rem 2rem 6rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+
+  /* HERO */
+  .hero {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    animation: fadeUp 0.8s both;
+  }
+  @keyframes fadeUp {
+    from { opacity:0; transform:translateY(24px); }
+    to { opacity:1; transform:translateY(0); }
+  }
+  .hero-eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    color: var(--accent);
+    text-transform: uppercase;
+    transition: color var(--transition);
+  }
+  .hero h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(2.6rem, 6vw, 4rem);
+    font-weight: 300;
+    line-height: 1.1;
+    letter-spacing: -0.01em;
+    color: var(--text);
+    transition: color var(--transition);
+  }
+  .hero h1 em {
+    font-style: italic;
+    color: var(--accent);
+    transition: color var(--transition);
+  }
+  .hero p {
+    color: var(--text-dim);
+    font-size: 1rem;
+    line-height: 1.6;
+    max-width: 480px;
+    margin: 0 auto;
+    transition: color var(--transition);
+  }
+
+  /* INPUT CARD */
+  .input-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 1.8rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    animation: fadeUp 0.8s 0.15s both;
+    transition: background var(--transition), border-color var(--transition);
+    backdrop-filter: blur(20px);
+  }
+  .input-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    transition: color var(--transition);
+  }
+  textarea {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    color: var(--text);
+    font-family: 'Cabinet Grotesk', sans-serif;
+    font-size: 1rem;
+    line-height: 1.6;
+    padding: 1rem 1.2rem;
+    resize: none;
+    height: 110px;
+    outline: none;
+    transition: border-color 0.3s, background 0.3s, color var(--transition);
+    cursor: none;
+  }
+  textarea::placeholder { color: var(--text-dim); opacity: 0.5; }
+  textarea:focus {
+    border-color: var(--accent);
+    background: rgba(255,255,255,0.05);
+  }
+  .input-actions {
+    display: flex;
+    gap: 0.8rem;
+    align-items: center;
+  }
+  .btn-primary {
+    flex: 1;
+    padding: 0.85rem 1.5rem;
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    border-radius: 12px;
+    font-family: 'Cabinet Grotesk', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    cursor: none;
+    transition: all 0.2s, background var(--transition), color var(--transition);
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-primary:hover { transform: translateY(-1px); filter: brightness(1.1); }
+  .btn-primary:active { transform: translateY(0); }
+  .btn-primary.loading { pointer-events: none; opacity: 0.7; }
+  .btn-primary .btn-spinner {
+    display: none;
+    width: 16px; height: 16px;
+    border: 2px solid rgba(0,0,0,0.3);
+    border-top-color: var(--bg);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    margin: 0 auto;
+  }
+  .btn-primary.loading .btn-text { display: none; }
+  .btn-primary.loading .btn-spinner { display: block; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* QUICK MOOD PILLS */
+  .quick-moods {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    animation: fadeUp 0.8s 0.25s both;
+  }
+  .quick-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.12em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    width: 100%;
+    margin-bottom: 0.2rem;
+    transition: color var(--transition);
+  }
+  .mood-pill {
+    padding: 0.45rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    background: var(--card-bg);
+    color: var(--text-dim);
+    font-size: 0.82rem;
+    cursor: none;
+    transition: all 0.2s, border-color var(--transition), color var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    backdrop-filter: blur(10px);
+  }
+  .mood-pill:hover {
+    border-color: var(--accent);
+    color: var(--text);
+    background: var(--glow);
+    transform: translateY(-1px);
+  }
+
+  /* RESULT SECTION */
+  #result-section {
+    display: none;
+    flex-direction: column;
+    gap: 1.5rem;
+    animation: fadeUp 0.6s both;
+  }
+  #result-section.visible { display: flex; }
+
+  /* MOOD CARD */
+  .mood-card {
+    background: var(--card-bg);
+    border: 1px solid var(--accent);
+    border-radius: 20px;
+    padding: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    position: relative;
+    overflow: hidden;
+    transition: all var(--transition);
+    backdrop-filter: blur(20px);
+  }
+  .mood-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--glow);
+    opacity: 0;
+    transition: opacity var(--transition);
+  }
+  .mood-card.active::before { opacity: 1; }
+  .mood-emoji-wrap {
+    width: 64px; height: 64px;
+    border-radius: 50%;
+    background: var(--glow);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    flex-shrink: 0;
+    transition: all var(--transition);
+  }
+  .mood-info { flex: 1; }
+  .mood-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.8rem;
+    font-weight: 400;
+    color: var(--accent);
+    transition: color var(--transition);
+  }
+  .mood-desc {
+    font-size: 0.88rem;
+    color: var(--text-dim);
+    line-height: 1.5;
+    margin-top: 0.3rem;
+    transition: color var(--transition);
+  }
+  .mood-confidence {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.12em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-top: 0.5rem;
+    transition: color var(--transition);
+  }
+  .confidence-bar {
+    width: 100%;
+    height: 2px;
+    background: var(--border);
+    border-radius: 100px;
+    margin-top: 0.4rem;
+    overflow: hidden;
+  }
+  .confidence-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 100px;
+    transition: width 1s cubic-bezier(0.16,1,0.3,1), background var(--transition);
+  }
+
+  /* SUGGESTIONS */
+  .suggestions-header {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    transition: color var(--transition);
+  }
+  .suggestions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+  }
+  .suggestion-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.4rem;
+    cursor: none;
+    transition: all 0.2s, background var(--transition), border-color var(--transition);
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(10px);
+  }
+  .suggestion-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    background: var(--glow);
+  }
+  .suggestion-card.active-suggestion {
+    border-color: var(--accent);
+    background: var(--glow);
+  }
+  .suggestion-icon {
+    font-size: 1.6rem;
+    margin-bottom: 0.8rem;
+    display: block;
+  }
+  .suggestion-title {
+    font-weight: 700;
+    font-size: 0.92rem;
+    color: var(--text);
+    margin-bottom: 0.3rem;
+    transition: color var(--transition);
+  }
+  .suggestion-sub {
+    font-size: 0.78rem;
+    color: var(--text-dim);
+    line-height: 1.4;
+    transition: color var(--transition);
+  }
+  .suggestion-tag {
+    position: absolute;
+    top: 0.8rem; right: 0.8rem;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: var(--glow);
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    transition: all var(--transition);
+  }
+
+  /* ACTIVITY PANEL */
+  #activity-panel {
+    display: none;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 2rem;
+    transition: all var(--transition);
+    backdrop-filter: blur(20px);
+    animation: fadeUp 0.5s both;
+  }
+  #activity-panel.visible { display: block; }
+  .activity-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.4rem;
+    font-weight: 400;
+    color: var(--text);
+    margin-bottom: 1.2rem;
+    transition: color var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+  .activity-close {
+    margin-left: auto;
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-size: 0.8rem;
+    cursor: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+  .activity-close:hover { border-color: var(--accent); color: var(--text); }
+
+  /* BREATHING */
+  .breathing-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 1rem 0;
+  }
+  .breath-ring {
+    width: 120px; height: 120px;
+    border-radius: 50%;
+    background: var(--glow);
+    border: 2px solid var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    text-transform: uppercase;
+    transition: all 0.5s;
+  }
+  .breath-ring.inhale { animation: breatheIn 4s ease-in-out; }
+  .breath-ring.exhale { animation: breatheOut 4s ease-in-out; }
+  @keyframes breatheIn { from{transform:scale(0.8);opacity:0.5} to{transform:scale(1.3);opacity:1} }
+  @keyframes breatheOut { from{transform:scale(1.3);opacity:1} to{transform:scale(0.8);opacity:0.5} }
+  .breath-instruction {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.6rem;
+    font-style: italic;
+    color: var(--text);
+    text-align: center;
+    transition: color var(--transition);
+  }
+  .breath-steps {
+    display: flex;
+    gap: 0.5rem;
+  }
+  .breath-step {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--border);
+    transition: background 0.3s;
+  }
+  .breath-step.done { background: var(--accent); }
+
+  /* JOURNAL */
+  .journal-prompts { display: flex; flex-direction: column; gap: 0.8rem; }
+  .journal-prompt {
+    padding: 1rem 1.2rem;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    font-size: 0.9rem;
+    color: var(--text-dim);
+    line-height: 1.5;
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 1rem;
+    transition: all var(--transition);
+  }
+  .journal-area {
+    margin-top: 1rem;
+  }
+  .journal-area textarea {
+    width: 100%;
+    height: 120px;
+  }
+
+  /* ACTION PLAN */
+  .action-list { display: flex; flex-direction: column; gap: 0.6rem; margin-top: 0.5rem; }
+  .action-item {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 0.8rem 1rem;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    cursor: none;
+    transition: all 0.2s, border-color var(--transition);
+  }
+  .action-item:hover { border-color: var(--accent); background: var(--glow); }
+  .action-item.done { opacity: 0.5; }
+  .action-item.done .action-check { background: var(--accent); border-color: var(--accent); }
+  .action-item.done .action-check::after { content: '✓'; color: var(--bg); }
+  .action-check {
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    border: 1.5px solid var(--border);
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.65rem;
+    font-weight: 700;
+    transition: all 0.3s, border-color var(--transition);
+  }
+  .action-text { font-size: 0.9rem; color: var(--text); transition: color var(--transition); }
+
+  /* MOTIVATION */
+  .quote-wrap {
+    text-align: center;
+    padding: 1rem;
+  }
+  .quote-text {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.5rem;
+    font-weight: 300;
+    font-style: italic;
+    line-height: 1.5;
+    color: var(--text);
+    transition: color var(--transition);
+  }
+  .quote-author {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-top: 1rem;
+    transition: color var(--transition);
+  }
+  .affirmations { display: flex; flex-direction: column; gap: 0.6rem; margin-top: 1rem; }
+  .affirmation {
+    padding: 0.7rem 1rem;
+    background: var(--glow);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.88rem;
+    color: var(--text);
+    display: flex;
+    gap: 0.6rem;
+    align-items: flex-start;
+    transition: all var(--transition);
+  }
+  .affirmation-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    flex-shrink: 0;
+    margin-top: 0.35rem;
+    transition: background var(--transition);
+  }
+
+  /* HISTORY */
+  .history-section {
+    animation: fadeUp 0.8s 0.35s both;
+  }
+  .history-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+  }
+  .history-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    transition: color var(--transition);
+  }
+  .history-clear {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    background: none;
+    border: none;
+    cursor: none;
+    transition: color 0.2s;
+  }
+  .history-clear:hover { color: var(--accent); }
+  .history-list { display: flex; flex-direction: column; gap: 0.5rem; }
+  .history-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.8rem 1.1rem;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    transition: all var(--transition);
+    backdrop-filter: blur(10px);
+  }
+  .history-time {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    min-width: 50px;
+    transition: color var(--transition);
+  }
+  .history-emoji { font-size: 1rem; }
+  .history-mood {
+    font-size: 0.88rem;
+    color: var(--text);
+    font-weight: 500;
+    flex: 1;
+    transition: color var(--transition);
+  }
+  .history-text {
+    font-size: 0.78rem;
+    color: var(--text-dim);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 160px;
+    transition: color var(--transition);
+  }
+  .empty-history {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-dim);
+    font-size: 0.85rem;
+    font-style: italic;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1rem;
+    transition: color var(--transition);
+  }
+
+  /* CHART */
+  .mood-chart {
+    display: flex;
+    gap: 4px;
+    align-items: flex-end;
+    height: 60px;
+    margin-top: 1rem;
+  }
+  .chart-bar {
+    flex: 1;
+    border-radius: 4px 4px 0 0;
+    background: var(--accent);
+    opacity: 0.4;
+    transition: all 0.3s, background var(--transition);
+    position: relative;
+  }
+  .chart-bar.today { opacity: 1; }
+  .chart-bar:hover { opacity: 0.8; }
+
+  /* FOOTER */
+  footer {
+    width: 100%;
+    max-width: 700px;
+    padding: 2rem;
+    text-align: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    opacity: 0.5;
+    transition: color var(--transition);
+  }
+
+  /* ERROR */
+  .error-toast {
+    display: none;
+    position: fixed;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #2a0a0a;
+    border: 1px solid #aa4444;
+    color: #f08080;
+    padding: 0.8rem 1.5rem;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    z-index: 100;
+    animation: slideUp 0.3s both;
+  }
+  .error-toast.visible { display: block; }
+  @keyframes slideUp { from{transform:translateX(-50%) translateY(20px);opacity:0} to{transform:translateX(-50%) translateY(0);opacity:1} }
+
+  /* BUTTON BTN2 */
+  .btn-secondary {
+    padding: 0.7rem 1.2rem;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    color: var(--text-dim);
+    font-family: 'Cabinet Grotesk', sans-serif;
+    font-size: 0.85rem;
+    cursor: none;
+    transition: all 0.2s, border-color var(--transition), background var(--transition);
+    backdrop-filter: blur(10px);
+    white-space: nowrap;
+  }
+  .btn-secondary:hover { border-color: var(--accent); color: var(--text); background: var(--glow); }
+
+  /* FOCUS MODE BANNER */
+  .focus-banner {
+    display: none;
+    width: 100%;
+    max-width: 700px;
+    padding: 0 2rem;
+    animation: fadeUp 0.5s both;
+  }
+  .focus-banner.visible { display: block; }
+  .focus-inner {
+    background: var(--glow);
+    border: 1px solid var(--accent);
+    border-radius: 14px;
+    padding: 1rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-size: 0.88rem;
+    color: var(--text);
+    transition: all var(--transition);
+  }
+  .focus-icon { font-size: 1.2rem; }
+  .focus-text { flex: 1; line-height: 1.4; }
+  .focus-text strong { color: var(--accent); }
+
+  @media (max-width: 600px) {
+    .suggestions-grid { grid-template-columns: 1fr; }
+    .hero h1 { font-size: 2.2rem; }
+    .mood-card { flex-direction: column; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<div class="bg-scene">
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+</div>
+<div class="noise"></div>
+
+<div class="app">
+  <header>
+    <div class="logo">Mood<span>Space</span></div>
+    <div class="streak-badge">
+      <div class="streak-dot"></div>
+      <span id="streak-text">Day 1 streak</span>
+    </div>
+  </header>
+
+  <div class="main">
+    <!-- HERO -->
+    <div class="hero">
+      <div class="hero-eyebrow">AI-powered emotional companion</div>
+      <h1>How are you <em>feeling</em><br>right now?</h1>
+      <p>Share what's on your mind. I'll understand your mood and help you navigate it — with the right tools, at the right time.</p>
+    </div>
+
+    <!-- INPUT -->
+    <div class="input-card">
+      <div class="input-label">What's going on today?</div>
+      <textarea id="mood-input" placeholder="I feel overwhelmed and can't focus today… or just type a word like 'tired' or 'excited'" maxlength="500"></textarea>
+      <div class="input-actions">
+        <button class="btn-primary" id="detect-btn" onclick="detectMood()">
+          <span class="btn-text">✦ Detect my mood</span>
+          <div class="btn-spinner"></div>
+        </button>
+      </div>
+    </div>
+
+    <!-- QUICK MOODS -->
+    <div class="quick-moods">
+      <div class="quick-label">Or pick a feeling</div>
+      <button class="mood-pill" onclick="setMoodManual('joyful')">😄 Joyful</button>
+      <button class="mood-pill" onclick="setMoodManual('calm')">😌 Calm</button>
+      <button class="mood-pill" onclick="setMoodManual('anxious')">😰 Anxious</button>
+      <button class="mood-pill" onclick="setMoodManual('energetic')">⚡ Energetic</button>
+      <button class="mood-pill" onclick="setMoodManual('sad')">🌧 Sad</button>
+      <button class="mood-pill" onclick="setMoodManual('focused')">🎯 Focused</button>
+    </div>
+
+    <!-- FOCUS BANNER -->
+    <div class="focus-banner" id="focus-banner">
+      <div class="focus-inner">
+        <span class="focus-icon">🧘</span>
+        <div class="focus-text"><strong>Focus mode activated.</strong> The interface has been calmed to help reduce overwhelm. Take your time.</div>
+      </div>
+    </div>
+
+    <!-- RESULT -->
+    <div id="result-section">
+      <div class="mood-card active" id="mood-card">
+        <div class="mood-emoji-wrap" id="mood-emoji">😌</div>
+        <div class="mood-info">
+          <div class="mood-name" id="mood-name">Calm</div>
+          <div class="mood-desc" id="mood-desc">You seem to be in a peaceful, reflective state today.</div>
+          <div class="mood-confidence">
+            <span id="confidence-label">Confidence: 88%</span>
+            <div class="confidence-bar"><div class="confidence-fill" id="confidence-fill" style="width:88%"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="suggestions-header">Suggested for you</div>
+      <div class="suggestions-grid" id="suggestions-grid"></div>
+    </div>
+
+    <!-- ACTIVITY PANEL -->
+    <div id="activity-panel">
+      <div class="activity-title">
+        <span id="activity-icon">🌬</span>
+        <span id="activity-title-text">2-Minute Reset</span>
+        <button class="activity-close" onclick="closeActivity()">✕</button>
+      </div>
+      <div id="activity-content"></div>
+    </div>
+
+    <!-- HISTORY -->
+    <div class="history-section">
+      <div class="history-header">
+        <div class="history-title">Mood history</div>
+        <button class="history-clear" onclick="clearHistory()">Clear</button>
+      </div>
+      <div class="mood-chart" id="mood-chart"></div>
+      <div class="history-list" id="history-list">
+        <div class="empty-history">Your mood journal will appear here…</div>
+      </div>
+    </div>
+  </div>
+
+  <footer>MoodSpace — Built with AI + ♡ — Your data stays local</footer>
+</div>
+
+<div class="error-toast" id="error-toast">Something went wrong. Please try again.</div>
+
+<script>
+// ─── STATE ─────────────────────────────────────────────────────────────
+let currentMood = null;
+let moodHistory = JSON.parse(localStorage.getItem('moodHistory') || '[]');
+let streak = parseInt(localStorage.getItem('moodStreak') || '1');
+
+// ─── CURSOR ────────────────────────────────────────────────────────────
+const cursor = document.getElementById('cursor');
+const ring = document.getElementById('cursorRing');
+let mx = 0, my = 0, rx = 0, ry = 0;
+document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+(function animCursor() {
+  cursor.style.left = (mx - 5) + 'px';
+  cursor.style.top = (my - 5) + 'px';
+  rx += (mx - rx) * 0.12;
+  ry += (my - ry) * 0.12;
+  ring.style.left = (rx - 18) + 'px';
+  ring.style.top = (ry - 18) + 'px';
+  requestAnimationFrame(animCursor);
+})();
+
+// ─── MOOD CONFIG ────────────────────────────────────────────────────────
+const MOODS = {
+  joyful: {
+    emoji: '😄', name: 'Joyful', theme: 'joyful',
+    desc: 'You\'re radiating positive energy! Channel this brightness into something meaningful.',
+    suggestions: [
+      { icon: '🎯', title: 'Ride the wave', sub: 'Tackle that big task you\'ve been avoiding', tag: 'Productivity', activity: 'plan' },
+      { icon: '💌', title: 'Share the joy', sub: 'Reach out to someone who deserves to hear from you', tag: 'Social', activity: 'motivation' },
+      { icon: '📓', title: 'Capture this', sub: 'Journal what\'s making you feel this good', tag: '5 min', activity: 'journal' }
+    ]
+  },
+  calm: {
+    emoji: '😌', name: 'Calm', theme: 'calm',
+    desc: 'You\'re in a peaceful, reflective state. Perfect for deep work or quiet introspection.',
+    suggestions: [
+      { icon: '🌊', title: 'Deep work', sub: 'Your calm state is ideal for complex thinking', tag: 'Focus', activity: 'plan' },
+      { icon: '📓', title: 'Reflect & write', sub: 'A great moment to journal your thoughts', tag: '10 min', activity: 'journal' },
+      { icon: '✨', title: 'Gratitude moment', sub: 'Name three things filling you with peace', tag: 'Mindful', activity: 'motivation' }
+    ]
+  },
+  anxious: {
+    emoji: '😰', name: 'Anxious', theme: 'anxious',
+    desc: 'Anxiety is a signal, not a verdict. Let\'s slow things down together with small, grounding steps.',
+    suggestions: [
+      { icon: '🌬', title: '2-min reset', sub: 'A quick breathing exercise to settle your nervous system', tag: 'Grounding', activity: 'breathe' },
+      { icon: '📓', title: 'Journal it out', sub: 'Write down what\'s worrying you — it loses power on paper', tag: '5 min', activity: 'journal' },
+      { icon: '✅', title: 'Tiny action plan', sub: 'Break the overwhelm into one small, doable step', tag: 'Clarity', activity: 'plan' }
+    ]
+  },
+  energetic: {
+    emoji: '⚡', name: 'Energetic', theme: 'energetic',
+    desc: 'High energy, ready to move. Let\'s put this fire to work before it burns out.',
+    suggestions: [
+      { icon: '🚀', title: 'Sprint session', sub: 'Do your hardest task in a focused 25-min burst', tag: 'Power mode', activity: 'plan' },
+      { icon: '🌬', title: 'Channel it', sub: 'Quick breathing to direct that energy with intention', tag: '2 min', activity: 'breathe' },
+      { icon: '📓', title: 'Vision journal', sub: 'Write where you want this energy to take you', tag: 'Clarity', activity: 'journal' }
+    ]
+  },
+  sad: {
+    emoji: '🌧', name: 'Heavy-hearted', theme: 'sad',
+    desc: 'Sadness asks to be felt, not fixed. You don\'t have to rush through this — you\'re held here.',
+    suggestions: [
+      { icon: '🌬', title: 'Gentle breathing', sub: 'Slow, tender breaths to soften the weight', tag: 'Comfort', activity: 'breathe' },
+      { icon: '📓', title: 'Let it out', sub: 'Write without filters. Nothing needs to make sense.', tag: 'Release', activity: 'journal' },
+      { icon: '💛', title: 'Small kindness', sub: 'One tiny act of care for yourself right now', tag: 'Self-love', activity: 'motivation' }
+    ]
+  },
+  focused: {
+    emoji: '🎯', name: 'Focused', theme: 'focused',
+    desc: 'You\'re in the zone. Protect this state and use it with intention.',
+    suggestions: [
+      { icon: '🚀', title: 'Go deep', sub: 'Remove distractions and start your most important task', tag: 'Flow', activity: 'plan' },
+      { icon: '⏱', title: 'Time-block', sub: 'Structure the next 2 hours into focused sprints', tag: 'Planning', activity: 'plan' },
+      { icon: '📓', title: 'Set intentions', sub: 'Write your top 3 goals for today before you dive in', tag: '3 min', activity: 'journal' }
+    ]
+  }
+};
+
+// ─── ACTIVITY CONTENT ──────────────────────────────────────────────────
+const ACTIVITIES = {
+  breathe: (mood) => `
+    <div class="breathing-wrap">
+      <div class="breath-ring" id="breath-ring"><span id="breath-count">4</span></div>
+      <div class="breath-instruction" id="breath-instruction">Breathe in slowly…</div>
+      <div class="breath-steps" id="breath-steps">
+        ${[1,2,3,4,5,6].map(i=>`<div class="breath-step" id="bstep-${i}"></div>`).join('')}
+      </div>
+      <button class="btn-secondary" id="start-breath-btn" onclick="startBreathing()">Begin ✦</button>
+    </div>`,
+  journal: (mood) => {
+    const prompts = {
+      joyful: ['What made today feel so alive?', 'What would make tomorrow even better?', 'Who do you want to share this feeling with?'],
+      calm: ['What brought you to this peaceful state?', 'What are you grateful for in this moment?', 'What do you want to carry forward from today?'],
+      anxious: ['What is the real fear underneath the anxiety?', 'What is one small thing you can control right now?', 'What would you tell a friend feeling exactly this?'],
+      energetic: ['What have you been wanting to pursue but haven\'t started?', 'Where do you want this energy to take you?', 'What would make today feel like a win?'],
+      sad: ['What are you grieving, even if it seems small?', 'When did you last feel like yourself? What was different?', 'What does the kindest version of you want to say right now?'],
+      focused: ['What is the one most important thing to accomplish today?', 'What would make you feel proud at the end of the day?', 'What assumptions am I holding that might slow me down?']
+    };
+    const ps = prompts[mood] || prompts.calm;
+    return `<div class="journal-prompts">
+      ${ps.map(p=>`<div class="journal-prompt">"${p}"</div>`).join('')}
+    </div>
+    <div class="journal-area">
+      <textarea placeholder="Begin writing freely…" style="width:100%;height:120px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:12px;color:var(--text);font-family:'Cabinet Grotesk',sans-serif;font-size:0.92rem;padding:1rem 1.2rem;resize:none;outline:none;cursor:auto;"></textarea>
+    </div>`;
+  },
+  plan: (mood) => {
+    const plans = {
+      joyful: ['Identify the one task that will make today great', 'Block 30 mins for something you love', 'Write one goal you want to celebrate this week'],
+      calm: ['Choose your top 2 priorities for today', 'Schedule a single deep work block', 'Write one thing to let go of'],
+      anxious: ['Name the one thing causing the most stress', 'Break that thing into 3 tiny steps', 'Do just the first step — nothing else'],
+      energetic: ['List everything you want to do today', 'Choose only the top 3', 'Set a 25-min focused sprint timer'],
+      sad: ['Think of one small kind thing you can do for yourself', 'Name one person you could reach out to', 'Do one tiny thing that doesn\'t require energy'],
+      focused: ['Write your single most important task', 'Block distraction for 90 minutes', 'Identify one thing to delegate or drop']
+    };
+    const items = plans[mood] || plans.calm;
+    return `<div class="action-list" id="action-list">
+      ${items.map((t,i)=>`
+        <div class="action-item" id="action-${i}" onclick="toggleAction(${i})">
+          <div class="action-check" id="check-${i}"></div>
+          <div class="action-text">${t}</div>
+        </div>`).join('')}
+    </div>`;
+  },
+  motivation: (mood) => {
+    const quotes = {
+      joyful: {q:'The present moment is filled with joy and happiness. If you are attentive, you will see it.', a:'Thích Nhất Hạnh'},
+      calm: {q:'Within you there is a stillness and a sanctuary to which you can retreat at any time.', a:'Hermann Hesse'},
+      anxious: {q:'You don\'t have to control your thoughts. You just have to stop letting them control you.', a:'Dan Millman'},
+      energetic: {q:'Don\'t wait. The time will never be just right.', a:'Napoleon Hill'},
+      sad: {q:'Even the darkest night will end and the sun will rise.', a:'Victor Hugo'},
+      focused: {q:'It is not enough to be busy. So are the ants. The question is: what are we busy about?', a:'Thoreau'}
+    };
+    const q = quotes[mood] || quotes.calm;
+    const affirmations = {
+      joyful: ['This energy is a gift — use it fully', 'Your joy is contagious and real', 'You deserve to feel this good'],
+      calm: ['Peace is your natural state', 'You are exactly where you need to be', 'Stillness is productive'],
+      anxious: ['Anxiety means you care deeply — that\'s a strength', 'You have navigated hard things before', 'One breath at a time is enough'],
+      energetic: ['Your energy is a resource — channel it well', 'Action creates momentum', 'You\'re capable of more than you know'],
+      sad: ['Feeling this deeply is not weakness', 'You are allowed to take up space', 'Healing isn\'t linear, and that\'s okay'],
+      focused: ['Clarity is your superpower today', 'You don\'t need motivation — you have discipline', 'Depth over breadth, always']
+    };
+    const affs = affirmations[mood] || affirmations.calm;
+    return `<div class="quote-wrap">
+      <div class="quote-text">"${q.q}"</div>
+      <div class="quote-author">— ${q.a}</div>
+    </div>
+    <div class="affirmations">
+      ${affs.map(a=>`<div class="affirmation"><div class="affirmation-dot"></div>${a}</div>`).join('')}
+    </div>`;
+  }
+};
+
+// ─── LOCAL MOOD CLASSIFIER (no API key needed) ──────────────────────────
+const MOOD_LEXICON = {
+  anxious: {
+    words: ['anxious','anxiety','overwhelm','overwhelmed','stressed','stress','panic','panicking','nervous','worried','worry','cant focus','can\'t focus','unfocused','restless','tense','dread','dreading','uneasy','scared','fear','afraid','too much','a lot on','spinning','racing','chest tight','rushing','chaotic','chaos','pressure','deadline','behind','falling behind','stuck','paralyzed','frozen','spiraling'],
+    weight: 1.2
+  },
+  sad: {
+    words: ['sad','sadness','unhappy','depressed','depression','down','low','crying','cried','tears','miss','missing','lost','empty','hollow','hopeless','hopelessness','worthless','alone','lonely','loneliness','grief','grieving','heartbroken','hurt','pain','numb','tired of','exhausted','drained','defeated','broken','heavy','blue','gloomy','dark','pointless','meaningless','disconnected','withdraw'],
+    weight: 1.15
+  },
+  joyful: {
+    words: ['happy','happiness','joyful','joy','excited','exciting','great','amazing','awesome','wonderful','fantastic','love','loving','grateful','gratitude','thrilled','elated','ecstatic','delighted','cheerful','good mood','on top','blessed','content','glad','pumped','stoked','smile','laughing','fun','fantastic','incredible','wow','best day','celebrate','celebrating','proud','winning'],
+    weight: 1.1
+  },
+  energetic: {
+    words: ['energetic','energy','motivated','motivation','ready','fired up','pumped','unstoppable','driven','momentum','productive','let\'s go','lets go','hyped','raring','charged','power','strong','active','moving','action','go mode','go time','crushing','killing it','on fire','full steam','ambitious','bold','dynamic','vigorous','alive','buzzing','electric'],
+    weight: 1.1
+  },
+  focused: {
+    words: ['focused','focus','concentrate','concentration','in the zone','flow','deep work','productive','clear','clarity','sharp','intent','intentional','locked in','dialed in','on task','goal','goals','working','grind','determined','disciplined','deliberate','strategic','efficient','steady','composed','methodical','calm and working','getting things done'],
+    weight: 1.05
+  },
+  calm: {
+    words: ['calm','peaceful','relaxed','relaxing','serene','tranquil','at peace','chill','mellow','quiet','still','gentle','slow','grounded','balanced','centered','okay','fine','alright','not bad','neutral','steady','stable','just existing','breathing','resting','easy','light','comfortable','safe','secure','content','unbothered','present','mindful'],
+    weight: 1.0
+  }
+};
+
+const NEGATIONS = ['not','no','never','don\'t','dont','doesn\'t','doesnt','isn\'t','isnt','aren\'t','arent','wasn\'t','wasnt','can\'t','cant','won\'t','wont','neither','hardly','barely'];
+
+const INTENSIFIERS = ['very','really','so','extremely','incredibly','absolutely','totally','completely','utterly','deeply','overwhelmingly','quite','pretty','super','especially','particularly'];
+
+const INSIGHTS = {
+  anxious: [
+    'You\'re carrying a heavy mental load right now.',
+    'Your mind seems to be running faster than it needs to.',
+    'There\'s a lot weighing on you — that\'s okay to admit.',
+    'Anxiety is just care without direction. Let\'s find it.'
+  ],
+  sad: [
+    'You\'re sitting with some real heaviness today.',
+    'Something is pulling your heart down right now.',
+    'You\'re allowed to feel exactly this.',
+    'There\'s a quiet ache in what you\'re carrying today.'
+  ],
+  joyful: [
+    'You\'re radiating something genuinely bright today.',
+    'That lightness in you is real and worth celebrating.',
+    'You seem to be in a wonderful, open-hearted place.',
+    'Your energy feels warm and full of life right now.'
+  ],
+  energetic: [
+    'Your energy is high and ready to be directed.',
+    'There\'s real momentum behind you today.',
+    'You\'re in motion — make it count.',
+    'That fire in you is looking for a worthy outlet.'
+  ],
+  focused: [
+    'Your mind is sharp and intent on achieving today.',
+    'You\'re in a clear, purposeful headspace right now.',
+    'That focus is a rare gift — protect it.',
+    'You know what you want and you\'re going after it.'
+  ],
+  calm: [
+    'You seem to be in a reflective, grounded state.',
+    'There\'s a quiet steadiness about you right now.',
+    'You\'re present and at ease — a good place to be.',
+    'That peaceful quality in you is worth leaning into.'
+  ]
+};
+
+function classifyMood(text) {
+  const lower = text.toLowerCase();
+  const tokens = lower.split(/\s+|[,\.!?;:]+/).filter(Boolean);
+  const scores = { anxious:0, sad:0, joyful:0, energetic:0, focused:0, calm:0 };
+
+  // Score each mood
+  for (const [mood, config] of Object.entries(MOOD_LEXICON)) {
+    for (const phrase of config.words) {
+      if (lower.includes(phrase)) {
+        // Check for negation in a 3-word window before the phrase
+        const idx = lower.indexOf(phrase);
+        const before = lower.slice(Math.max(0, idx - 25), idx);
+        const beforeTokens = before.split(/\s+/).filter(Boolean);
+        const isNegated = beforeTokens.slice(-3).some(t => NEGATIONS.includes(t));
+        if (isNegated) continue;
+
+        // Check for intensifier
+        const hasIntensifier = beforeTokens.slice(-2).some(t => INTENSIFIERS.includes(t));
+        const score = config.weight * (hasIntensifier ? 1.5 : 1.0) * (phrase.includes(' ') ? 1.3 : 1.0);
+        scores[mood] += score;
+      }
+    }
+  }
+
+  // Emoji signals
+  const emojiMap = {
+    anxious: ['😰','😨','😟','😧','😱','🤯','😫','😩','😣'],
+    sad: ['😢','😭','😔','😞','💔','🥺','😿','😥'],
+    joyful: ['😄','😃','😁','🥰','😍','🤩','😎','🎉','✨','💫','🌟','❤️','🙌'],
+    energetic: ['⚡','🔥','💪','🚀','🏃','💥','🎯'],
+    focused: ['🎯','💡','📚','✅','🧠','🔬'],
+    calm: ['😌','🙏','☮️','🌿','🌊','🧘','🌸']
+  };
+  for (const [mood, emojis] of Object.entries(emojiMap)) {
+    const count = emojis.filter(e => text.includes(e)).length;
+    scores[mood] += count * 0.8;
+  }
+
+  // Sentence-level sentiment patterns
+  if (/i (feel|am|'m) (so |really |very )?(good|great|amazing|happy|excited)/.test(lower)) scores.joyful += 2;
+  if (/i (feel|am|'m) (so |really |very )?(tired|exhausted|drained|empty)/.test(lower)) scores.sad += 1.5;
+  if (/i (can't|cannot|cant) (stop|sleep|breathe|think|focus)/.test(lower)) scores.anxious += 2;
+  if (/i (need to|have to|must) (do|finish|complete|handle)/.test(lower)) scores.anxious += 0.8;
+  if (/(today is|this is) (a )?(great|amazing|good|wonderful)/.test(lower)) scores.joyful += 1.5;
+  if (/ready to|let's go|let go|time to/.test(lower)) scores.energetic += 1.2;
+  if (/just (want|need|trying) to (focus|work|get|finish)/.test(lower)) scores.focused += 1.5;
+
+  // Text length / punctuation signals
+  const exclamations = (text.match(/!/g) || []).length;
+  const questions = (text.match(/\?/g) || []).length;
+  if (exclamations >= 2) { scores.joyful += 0.5; scores.energetic += 0.5; }
+  if (questions >= 2) scores.anxious += 0.4;
+  if (text.toUpperCase() === text && text.length > 3) { scores.energetic += 0.5; scores.joyful += 0.3; }
+
+  // Find winner
+  const sorted = Object.entries(scores).sort((a, b) => b[1] - a[1]);
+  const [topMood, topScore] = sorted[0];
+  const [, secondScore] = sorted[1];
+
+  // If all scores are 0 or very low → calm as default
+  if (topScore < 0.5) return { mood: 'calm', confidence: 72, insight: INSIGHTS.calm[0] };
+
+  // Confidence: how much the top score dominates
+  const total = Object.values(scores).reduce((a,b) => a+b, 0);
+  const rawConf = total > 0 ? (topScore / total) : 0.5;
+  const confidence = Math.round(Math.min(96, Math.max(70, 60 + rawConf * 60)));
+
+  // Pick a varied insight
+  const insightList = INSIGHTS[topMood];
+  const insight = insightList[Math.floor(Math.random() * insightList.length)];
+
+  return { mood: topMood, confidence, insight };
+}
+
+function detectMood() {
+  const input = document.getElementById('mood-input').value.trim();
+  if (!input) { showError('Please write something about how you\'re feeling.'); return; }
+
+  const btn = document.getElementById('detect-btn');
+  btn.classList.add('loading');
+
+  // Small delay for UX feel
+  setTimeout(() => {
+    const result = classifyMood(input);
+    applyMood(result.mood, result.confidence, result.insight, input);
+    btn.classList.remove('loading');
+  }, 600);
+}
+
+function setMoodManual(mood) {
+  const m = MOODS[mood];
+  applyMood(mood, 95, m.desc, mood);
+}
+
+function applyMood(moodKey, confidence, insight, inputText) {
+  const mood = MOODS[moodKey] || MOODS.calm;
+  currentMood = moodKey;
+
+  // Apply theme
+  document.body.className = `theme-${mood.theme}`;
+
+  // Focus mode for anxious/sad
+  const focusBanner = document.getElementById('focus-banner');
+  if (moodKey === 'anxious' || moodKey === 'sad') {
+    focusBanner.classList.add('visible');
+  } else {
+    focusBanner.classList.remove('visible');
+  }
+
+  // Update mood card
+  document.getElementById('mood-emoji').textContent = mood.emoji;
+  document.getElementById('mood-name').textContent = mood.name;
+  document.getElementById('mood-desc').textContent = insight;
+  document.getElementById('confidence-label').textContent = `Confidence: ${confidence}%`;
+  document.getElementById('confidence-fill').style.width = confidence + '%';
+
+  // Render suggestions
+  const grid = document.getElementById('suggestions-grid');
+  grid.innerHTML = mood.suggestions.map((s, i) => `
+    <div class="suggestion-card" style="animation-delay:${i*0.1}s;animation:fadeUp 0.5s ${i*0.1}s both" onclick="openActivity('${s.activity}')">
+      <span class="suggestion-icon">${s.icon}</span>
+      <div class="suggestion-title">${s.title}</div>
+      <div class="suggestion-sub">${s.sub}</div>
+      <div class="suggestion-tag">${s.tag}</div>
+    </div>`).join('');
+
+  // Show result
+  const rs = document.getElementById('result-section');
+  rs.classList.add('visible');
+
+  // Close activity
+  closeActivity();
+
+  // Save to history
+  saveHistory(moodKey, mood.emoji, mood.name, inputText);
+
+  // Scroll to result
+  setTimeout(() => rs.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100);
+}
+
+// ─── ACTIVITY ────────────────────────────────────────────────────────────
+function openActivity(type) {
+  if (!currentMood) return;
+  const panel = document.getElementById('activity-panel');
+  const icons = { breathe:'🌬', journal:'📓', plan:'✅', motivation:'💛' };
+  const titles = { breathe:'2-Minute Reset', journal:'Journal Prompts', plan:'Tiny Action Plan', motivation:'A Moment for You' };
+
+  document.getElementById('activity-icon').textContent = icons[type] || '✦';
+  document.getElementById('activity-title-text').textContent = titles[type] || type;
+  document.getElementById('activity-content').innerHTML = ACTIVITIES[type](currentMood);
+
+  panel.classList.add('visible');
+  setTimeout(() => panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100);
+}
+
+function closeActivity() {
+  document.getElementById('activity-panel').classList.remove('visible');
+  stopBreathing();
+}
+
+// ─── BREATHING ───────────────────────────────────────────────────────────
+let breathTimer = null, breathPhase = 0, breathCycle = 0;
+const breathPhases = [
+  { text:'Breathe in…', dur:4000, cls:'inhale' },
+  { text:'Hold…', dur:2000, cls:'' },
+  { text:'Breathe out…', dur:4000, cls:'exhale' },
+  { text:'Rest…', dur:1000, cls:'' }
+];
+
+function startBreathing() {
+  document.getElementById('start-breath-btn').style.display = 'none';
+  breathPhase = 0; breathCycle = 0;
+  runBreathPhase();
+}
+
+function runBreathPhase() {
+  if (breathCycle >= 6) {
+    document.getElementById('breath-instruction').textContent = 'Well done ✦';
+    document.getElementById('breath-ring').className = 'breath-ring';
+    return;
+  }
+  const p = breathPhases[breathPhase % 4];
+  const ring = document.getElementById('breath-ring');
+  const instr = document.getElementById('breath-instruction');
+  if (ring && instr) {
+    ring.className = 'breath-ring ' + p.cls;
+    instr.textContent = p.text;
+    if (breathPhase % 4 === 0) {
+      const step = document.getElementById('bstep-' + (breathCycle + 1));
+      if (step) step.classList.add('done');
+      breathCycle++;
+    }
+    let countdown = Math.round(p.dur / 1000);
+    ring.querySelector('span') && (ring.querySelector('span').textContent = countdown);
+    const countInterval = setInterval(() => {
+      countdown--;
+      if (ring.querySelector('span')) ring.querySelector('span').textContent = Math.max(0, countdown);
+    }, 1000);
+    breathPhase++;
+    breathTimer = setTimeout(() => { clearInterval(countInterval); runBreathPhase(); }, p.dur);
+  }
+}
+
+function stopBreathing() {
+  if (breathTimer) clearTimeout(breathTimer);
+}
+
+// ─── ACTION ITEMS ─────────────────────────────────────────────────────────
+function toggleAction(i) {
+  const item = document.getElementById('action-' + i);
+  if (item) item.classList.toggle('done');
+}
+
+// ─── HISTORY ──────────────────────────────────────────────────────────────
+function saveHistory(moodKey, emoji, name, text) {
+  const now = new Date();
+  const entry = {
+    mood: moodKey, emoji, name,
+    text: text.length > 40 ? text.slice(0, 40) + '…' : text,
+    time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    date: now.toDateString()
+  };
+  moodHistory.unshift(entry);
+  if (moodHistory.length > 20) moodHistory.pop();
+  localStorage.setItem('moodHistory', JSON.stringify(moodHistory));
+  renderHistory();
+  updateStreak();
+}
+
+function renderHistory() {
+  const list = document.getElementById('history-list');
+  if (!moodHistory.length) {
+    list.innerHTML = '<div class="empty-history">Your mood journal will appear here…</div>';
+    return;
+  }
+  list.innerHTML = moodHistory.slice(0, 6).map(e => `
+    <div class="history-item">
+      <div class="history-time">${e.time}</div>
+      <div class="history-emoji">${e.emoji}</div>
+      <div class="history-mood">${e.name}</div>
+      <div class="history-text">${e.text}</div>
+    </div>`).join('');
+
+  // Render chart
+  const chart = document.getElementById('mood-chart');
+  const moodValues = { joyful: 5, energetic: 4, focused: 4, calm: 3, anxious: 2, sad: 1 };
+  const barData = moodHistory.slice(0, 10).reverse();
+  chart.innerHTML = barData.map((e, i) => {
+    const val = moodValues[e.mood] || 3;
+    const h = (val / 5) * 100;
+    const isToday = i === barData.length - 1;
+    return `<div class="chart-bar ${isToday ? 'today' : ''}" style="height:${h}%" title="${e.name}"></div>`;
+  }).join('');
+}
+
+function clearHistory() {
+  moodHistory = [];
+  localStorage.removeItem('moodHistory');
+  renderHistory();
+}
+
+function updateStreak() {
+  const last = localStorage.getItem('lastMoodDate');
+  const today = new Date().toDateString();
+  if (last !== today) {
+    const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
+    if (last === yesterday.toDateString()) {
+      streak++;
+    } else if (last && last !== today) {
+      streak = 1;
+    }
+    localStorage.setItem('lastMoodDate', today);
+    localStorage.setItem('moodStreak', streak);
+  }
+  document.getElementById('streak-text').textContent = `Day ${streak} streak`;
+}
+
+// ─── ERROR ────────────────────────────────────────────────────────────────
+function showError(msg) {
+  const t = document.getElementById('error-toast');
+  t.textContent = msg;
+  t.classList.add('visible');
+  setTimeout(() => t.classList.remove('visible'), 3000);
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────
+renderHistory();
+updateStreak();
+
+// Textarea enter submit
+document.getElementById('mood-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); detectMood(); }
+});
+</script>
+</body>
+</html>
